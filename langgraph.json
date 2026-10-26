@@ -1,0 +1,7 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "telecom_concierge": "./agents/deployable/agent.py:agent"
+  },
+  "env": ".env"
+}
