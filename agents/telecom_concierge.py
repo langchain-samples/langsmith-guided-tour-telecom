@@ -11,9 +11,16 @@ Two intentional defects power the failure-mode demo:
 
 from __future__ import annotations
 
-from langchain_core.tools import tool
+from datetime import datetime
+from pathlib import Path
 
+from deepagents import create_deep_agent
+from langchain_core.tools import tool
+from langgraph.checkpoint.memory import MemorySaver
+
+from utils.context_hub import pull_agent_instructions, pull_skills_to_disk
 from utils.mock_data import CUSTOMERS, PLANS, search_docs
+from utils.models import model
 
 
 def _format_account(rec: dict) -> str:
@@ -82,3 +89,50 @@ def search_support_docs(query: str) -> str:
     if not hits:
         return "I couldn't find anything in the support docs for that query."
     return "\n\n".join(hits)
+
+
+# Local fallbacks used when Context Hub is unreachable (keeps the notebook runnable offline).
+_LOCAL_SKILLS_DIR = str(Path(__file__).resolve().parent / "deployable" / "skills")
+_SEED_AGENTS_MD = (Path(__file__).resolve().parent / "deployable" / "AGENTS.md").read_text()
+
+network_diagnostics_subagent = {
+    "name": "network-diagnostics",
+    "description": "Delegate deep device/network troubleshooting. Give one issue at a time.",
+    "system_prompt": (
+        f"You are a Northwind Mobile network diagnostics specialist. "
+        f"Today is {datetime.now().strftime('%Y-%m-%d')}.\n"
+        "Walk through likely causes of a connectivity issue (coverage, device settings, "
+        "SIM/eSIM, outage) and give concrete steps. Use check_network_status when a ZIP is known."
+    ),
+    "tools": [check_network_status, search_support_docs],
+}
+
+
+def build_telecom_concierge(pull_from_hub: bool = True, with_checkpointer: bool = True):
+    """Build a fresh Northwind Mobile concierge deep agent (no HITL).
+
+    pull_from_hub=True  -> instructions + skills come from LangSmith Context Hub
+                           (falls back to local seed files if the hub is unreachable).
+    with_checkpointer=True -> include MemorySaver (notebook multi-turn). The deployable
+                           build passes False; the langgraph server injects persistence.
+    """
+    if pull_from_hub:
+        system_prompt = pull_agent_instructions(fallback=_SEED_AGENTS_MD)
+        try:
+            skills_dir = pull_skills_to_disk()
+        except Exception:
+            skills_dir = _LOCAL_SKILLS_DIR
+    else:
+        system_prompt = _SEED_AGENTS_MD
+        skills_dir = _LOCAL_SKILLS_DIR
+
+    kwargs = dict(
+        model=model,
+        tools=[get_customer_account, get_data_usage, check_network_status, search_support_docs],
+        system_prompt=system_prompt,
+        subagents=[network_diagnostics_subagent],
+        skills=[skills_dir],
+    )
+    if with_checkpointer:
+        kwargs["checkpointer"] = MemorySaver()
+    return create_deep_agent(**kwargs)
