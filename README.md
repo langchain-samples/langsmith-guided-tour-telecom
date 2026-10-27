@@ -67,12 +67,16 @@ uv run jupyter notebook modules/01_traces_and_threads.ipynb
 |---|---|---|
 | `LANGSMITH_API_KEY` | ✅ | Tracing, Context Hub, datasets/experiments, online evals |
 | `LANGSMITH_TRACING` | ✅ | Set to `true` to capture traces |
-| `LANGSMITH_ENDPOINT` | — | LangSmith API base (default `https://api.smith.langchain.com`) |
+| `LANGSMITH_ENDPOINT` | — | LangSmith API base — cloud default `https://api.smith.langchain.com`; **set to your instance URL if self-hosted** |
 | `ANTHROPIC_API_KEY` | ✅ | The model provider key (default provider) |
 | `MODEL_BASE_URL` | — | *Optional* — route model calls through **your own gateway** (see below) |
 | `MODEL_NAME` | — | *Optional* — override the model (default `claude-sonnet-4-6`) |
 
 `.env` is git-ignored — your keys never get committed. `.env.example` is the committed template.
+
+**Self-hosted LangSmith:** set `LANGSMITH_ENDPOINT` to your instance URL. Everything derives from it —
+tracing, Context Hub, datasets/experiments (via the SDK `Client`), and the OTEL endpoints in Module 1 are
+all built from `LANGSMITH_ENDPOINT`, so nothing is hardcoded to the cloud host.
 
 Each attendee's traces, datasets, and experiments are **namespaced by name** (`telecom-concierge-<you>`),
 so a shared workspace doesn't collide — the notebooks prompt for your name and set the project for you.
