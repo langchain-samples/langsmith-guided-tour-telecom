@@ -6,6 +6,7 @@ __pycache__/
 !.env.example
 .context/
 .ipynb_checkpoints/
+.pytest_cache/
 .langgraph_api/
 *.pem
 *.key
