@@ -15,6 +15,8 @@ dependencies = [
     "ipywidgets>=8.1.0",
     "grandalf>=0.8",
     "pillow>=10.0",
+    "opentelemetry-sdk>=1.20",
+    "opentelemetry-exporter-otlp>=1.20",
 ]
 
 [project.optional-dependencies]
