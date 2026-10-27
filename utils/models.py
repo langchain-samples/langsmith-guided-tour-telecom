@@ -1,10 +1,14 @@
-"""Centralized model init. Swap providers here only.
+"""Centralized model init. Swap providers / endpoints here only.
 
-Default routes Claude Sonnet 4.6 (vision-capable, needed for the multi-modal
-example) through the LangSmith LLM Gateway, authenticated with LANGSMITH_API_KEY
-— so a single token covers tracing, Context Hub, and model calls. Loads `.env`
-from the repo root regardless of cwd so it works from notebooks (cwd=modules/)
-and the langgraph server (cwd=root).
+Default: Anthropic Claude Sonnet 4.6 (vision-capable, needed for the multi-modal
+example) using your own `ANTHROPIC_API_KEY`.
+
+Optional: set `MODEL_BASE_URL` to route calls through your own gateway endpoint
+(any OpenAI/Anthropic-compatible proxy). Leave it unset to call Anthropic directly.
+Override the model with `MODEL_NAME`.
+
+Loads `.env` from the repo root regardless of cwd so it works from notebooks
+(cwd=modules/) and the langgraph server (cwd=root).
 """
 
 import os
@@ -17,13 +21,29 @@ load_dotenv(_ROOT / ".env", override=False)
 
 from langchain.chat_models import init_chat_model  # noqa: E402
 
-# --- Default: Anthropic via the LangSmith LLM Gateway (single-token auth) ---
-model = init_chat_model(
-    model="claude-sonnet-4-6",
-    model_provider="anthropic",
-    base_url="https://gateway.smith.langchain.com/anthropic",
-    api_key=os.environ["LANGSMITH_API_KEY"],
-)
+MODEL_NAME = os.environ.get("MODEL_NAME", "claude-sonnet-4-6")
+_BASE_URL = os.environ.get("MODEL_BASE_URL")  # optional: your own gateway endpoint
 
-# --- Anthropic, direct (requires ANTHROPIC_API_KEY) ---
-# model = init_chat_model("anthropic:claude-sonnet-4-6")
+if _BASE_URL:
+    # Route through your own gateway/proxy.
+    model = init_chat_model(
+        model=MODEL_NAME,
+        model_provider="anthropic",
+        base_url=_BASE_URL,
+        api_key=os.environ["ANTHROPIC_API_KEY"],
+    )
+else:
+    # Direct to Anthropic using ANTHROPIC_API_KEY.
+    model = init_chat_model(f"anthropic:{MODEL_NAME}")
+
+
+def anthropic_client_args() -> dict:
+    """client_args for the raw Anthropic SDK (used by Strands / OTEL cells).
+
+    Includes base_url only when MODEL_BASE_URL is set, so the same code works
+    direct-to-Anthropic or through your own gateway.
+    """
+    args = {"api_key": os.environ["ANTHROPIC_API_KEY"]}
+    if _BASE_URL:
+        args["base_url"] = _BASE_URL
+    return args
