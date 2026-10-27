@@ -78,3 +78,35 @@ def pull_agent_instructions(fallback: str = "", client: Client | None = None) ->
     except Exception:
         pass
     return fallback
+
+
+# --------------------------------------------------------------------------- #
+# A/B prompt variants (Module 3) — each variant is its own Context Hub agent repo.
+# --------------------------------------------------------------------------- #
+
+def _variant_repo(name: str) -> str:
+    return f"{HUB_PREFIX}-agent-{name}"
+
+
+def push_agent_variant(name: str, content: str, client: Client | None = None) -> str:
+    """Push one A/B prompt variant to Context Hub as `telecom-concierge-agent-<name>`."""
+    client = client or Client()
+    return client.push_agent(
+        _variant_repo(name),
+        files={"AGENTS.md": FileEntry(content=content)},
+        description=f"Northwind Mobile concierge — A/B prompt variant: {name}",
+        tags=[HUB_PREFIX, "ab-test"],
+    )
+
+
+def pull_agent_variant(name: str, fallback: str = "", client: Client | None = None) -> str:
+    """Pull an A/B prompt variant's AGENTS.md content from Context Hub."""
+    client = client or Client()
+    try:
+        agent = client.pull_agent(_variant_repo(name))
+        content = agent.files["AGENTS.md"].content
+        if content:
+            return content
+    except Exception:
+        pass
+    return fallback

@@ -108,28 +108,33 @@ network_diagnostics_subagent = {
 }
 
 
-def build_telecom_concierge(pull_from_hub: bool = True, with_checkpointer: bool = True):
+def build_telecom_concierge(pull_from_hub: bool = True, with_checkpointer: bool = True,
+                            system_prompt: str | None = None):
     """Build a fresh Northwind Mobile concierge deep agent (no HITL).
 
-    pull_from_hub=True  -> instructions + skills come from LangSmith Context Hub
-                           (falls back to local seed files if the hub is unreachable).
+    system_prompt   -> if given, use it directly (used for A/B prompt variants); skills stay local.
+    pull_from_hub=True -> otherwise pull instructions + skills from LangSmith Context Hub
+                          (falls back to local seed files if the hub is unreachable).
     with_checkpointer=True -> include MemorySaver (notebook multi-turn). The deployable
-                           build passes False; the langgraph server injects persistence.
+                          build passes False; the langgraph server injects persistence.
     """
-    if pull_from_hub:
-        system_prompt = pull_agent_instructions(fallback=_SEED_AGENTS_MD)
+    if system_prompt is not None:
+        prompt = system_prompt
+        skills_dir = _LOCAL_SKILLS_DIR
+    elif pull_from_hub:
+        prompt = pull_agent_instructions(fallback=_SEED_AGENTS_MD)
         try:
             skills_dir = pull_skills_to_disk()
         except Exception:
             skills_dir = _LOCAL_SKILLS_DIR
     else:
-        system_prompt = _SEED_AGENTS_MD
+        prompt = _SEED_AGENTS_MD
         skills_dir = _LOCAL_SKILLS_DIR
 
     kwargs = dict(
         model=model,
         tools=[get_customer_account, get_data_usage, check_network_status, search_support_docs],
-        system_prompt=system_prompt,
+        system_prompt=prompt,
         subagents=[network_diagnostics_subagent],
         skills=[skills_dir],
     )
