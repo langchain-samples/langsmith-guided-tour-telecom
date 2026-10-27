@@ -2,6 +2,17 @@
 __pycache__/
 *.pyc
 .env
+.env.*
+!.env.example
 .context/
 .ipynb_checkpoints/
 .langgraph_api/
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*.jks
+credentials.json
+token.json
+.DS_Store
