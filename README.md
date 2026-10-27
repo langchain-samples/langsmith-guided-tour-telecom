@@ -1,8 +1,8 @@
 # Telecom Concierge — LangSmith Workshop
 
 An instructor-led LangSmith workshop built around **Northwind Mobile**, a fictional telecom
-customer-support concierge. The agent is a [`deepagents`](https://github.com/langchain-ai/deepagents)
-deep agent — tools, a subagent, and skills — and the five notebooks walk through the full agent
+customer-support concierge. We will trace both langchain, non-langchain, and general OTEL agents, then follow a [`deepagents`](https://github.com/langchain-ai/deepagents)
+deep agent — tools, a subagent, and skills — using the five notebooks walk through the full agent
 engineering loop in LangSmith: **trace → evaluate (online & offline) → find failures → review**.
 
 > All customer data is synthetic. Northwind Mobile is fictional — not affiliated with any real carrier.
