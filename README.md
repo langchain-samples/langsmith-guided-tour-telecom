@@ -25,6 +25,8 @@ uv run langgraph dev
 - `modules/01_traces_and_threads.ipynb` — the workshop notebook
 - `modules/02_online_evals.ipynb` — online evaluators (set up in LangSmith) + seeding to score them
 - `modules/03_offline_evals.ipynb` — datasets + experiments (final-response / single-step / trajectory) + A/B prompt versions from Context Hub
+- `modules/04_finding_failure_modes.ipynb` — Engine (detect / fix / red team / verify), Chat, Insights
+- `modules/05_annotation_queues.ipynb` — route low-scoring runs to human review
 
 ## Note on intentional defects
 The hub `AGENTS.md` and `get_customer_account` tool deliberately cause hallucination and PII
