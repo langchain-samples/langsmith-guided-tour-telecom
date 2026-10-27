@@ -23,6 +23,7 @@ uv run langgraph dev
 - `agents/deployable/` — deployable graph + seed `AGENTS.md` + `skills/`
 - `utils/` — models, config (per-user project), mock data, Context Hub, seeding
 - `modules/01_traces_and_threads.ipynb` — the workshop notebook
+- `modules/02_online_evals.ipynb` — online evaluators (set up in LangSmith) + seeding to score them
 
 ## Note on intentional defects
 The hub `AGENTS.md` and `get_customer_account` tool deliberately cause hallucination and PII
