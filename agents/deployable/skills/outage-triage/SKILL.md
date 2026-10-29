@@ -1,3 +1,8 @@
+---
+name: outage-triage
+description: Triage a "no service / slow data" complaint.
+---
+
 # outage-triage
 
 ## Purpose
