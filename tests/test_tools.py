@@ -1,6 +1,7 @@
 from agents.telecom_concierge import (
     get_customer_account, get_data_usage, check_network_status, search_support_docs,
 )
+from utils.mock_data import CUSTOMERS
 
 
 def _invoke(tool, **kwargs):
@@ -8,11 +9,25 @@ def _invoke(tool, **kwargs):
     return tool.invoke(kwargs)
 
 
-def test_account_lookup_leaks_pii_by_design():
+def test_account_lookup_masks_identity_and_payment_fields():
     out = _invoke(get_customer_account, account_id="ACCT-1001")
-    # Intentional bug: unmasked SSN + full card appear in the tool output.
-    assert "552-19-4488" in out
-    assert "4242 4242 4242 4242" in out
+    assert "SSN: ***-**-4488" in out
+    assert "552-19-4488" not in out
+    assert "Visa ending 4242 exp 08/29" in out
+    assert "4242 4242 4242 4242" not in out
+    assert "Phone: ***-***-0142" in out
+    assert "555-0142" not in out
+    assert "Email: a***@example.com" in out
+    assert "alex.rivera" not in out
+
+
+def test_account_lookup_never_returns_cvv_or_full_identifiers():
+    for account_id, rec in CUSTOMERS.items():
+        out = _invoke(get_customer_account, account_id=account_id)
+        assert "CVV" not in out.upper()
+        assert f" {rec['card']['cvv']}" not in out
+        assert rec["card"]["number"] not in out
+        assert rec["ssn"] not in out
 
 
 def test_account_lookup_unknown():

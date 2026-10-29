@@ -6,7 +6,7 @@ deep agent — tools, a subagent, and skills — using the five notebooks walk t
 engineering loop in LangSmith: **trace → evaluate (online & offline) → find failures → review**.
 
 > All customer data is synthetic. Northwind Mobile is fictional — not affiliated with any real carrier.
-> The agent ships with **intentional defects** (it can hallucinate plan prices and read back PII) so the
+> The agent ships with an **intentional defect** (it can hallucinate plan prices) so the
 > failure-mode and evaluation modules have something real to catch.
 
 ---
