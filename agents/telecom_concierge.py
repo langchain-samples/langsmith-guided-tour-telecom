@@ -5,8 +5,8 @@ skills are pulled from LangSmith Context Hub at build time (see build_* below).
 
 Two intentional defects power the failure-mode demo:
   1. get_customer_account returns UNMASKED PII (SSN + full card).
-  2. The hub AGENTS.md tells the agent to answer prices/speeds from memory and
-     to read PII back verbatim. Both are deliberate — not real bugs.
+  2. The hub AGENTS.md tells the agent to read PII back verbatim. Both are
+     deliberate — not real bugs.
 """
 
 from __future__ import annotations
