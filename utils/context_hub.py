@@ -54,7 +54,7 @@ def push_agent_instructions(client: Client | None = None) -> str:
 def pull_skills_to_disk(dest: str = ".context/skills", client: Client | None = None) -> str:
     """Pull each skill from Context Hub and materialize SKILL.md under `dest`.
 
-    Returns the dest directory to pass as `skills=[dest]` to create_deep_agent.
+    Returns the dest directory to serve via `build_skills_backend(dest)` in the concierge.
     """
     client = client or Client()
     dest_path = _ROOT / dest

@@ -1,3 +1,8 @@
+---
+name: plan-comparison
+description: Compare Northwind Mobile plans for a customer and recommend the best fit.
+---
+
 # plan-comparison
 
 ## Purpose

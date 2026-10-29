@@ -11,16 +11,21 @@ Two intentional defects power the failure-mode demo:
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime
 from pathlib import Path
 
 from deepagents import create_deep_agent
+from deepagents.backends import CompositeBackend, FilesystemBackend, StateBackend
+from deepagents.middleware.skills import _list_skills
 from langchain_core.tools import tool
 from langgraph.checkpoint.memory import MemorySaver
 
 from utils.context_hub import pull_agent_instructions, pull_skills_to_disk
 from utils.mock_data import CUSTOMERS, PLANS, search_docs
 from utils.models import model
+
+logger = logging.getLogger(__name__)
 
 
 def _format_account(rec: dict) -> str:
@@ -94,6 +99,21 @@ def search_support_docs(query: str) -> str:
 # Local fallbacks used when Context Hub is unreachable (keeps the notebook runnable offline).
 _LOCAL_SKILLS_DIR = str(Path(__file__).resolve().parent / "deployable" / "skills")
 _SEED_AGENTS_MD = (Path(__file__).resolve().parent / "deployable" / "AGENTS.md").read_text()
+SKILLS_ROUTE = "/skills/"
+
+
+def build_skills_backend(skills_dir: str) -> CompositeBackend:
+    """Serve `skills_dir` at `/skills/` and keep every other path in agent state."""
+    backend = CompositeBackend(
+        default=StateBackend(),
+        routes={SKILLS_ROUTE: FilesystemBackend(root_dir=skills_dir, virtual_mode=True)},
+    )
+    if not _list_skills(backend, SKILLS_ROUTE):
+        logger.warning(
+            "No skills discovered in %s; each <skill>/SKILL.md needs YAML frontmatter "
+            "with 'name' and 'description'.", skills_dir,
+        )
+    return backend
 
 network_diagnostics_subagent = {
     "name": "network-diagnostics",
@@ -136,7 +156,8 @@ def build_telecom_concierge(pull_from_hub: bool = True, with_checkpointer: bool 
         tools=[get_customer_account, get_data_usage, check_network_status, search_support_docs],
         system_prompt=prompt,
         subagents=[network_diagnostics_subagent],
-        skills=[skills_dir],
+        skills=[SKILLS_ROUTE],
+        backend=build_skills_backend(skills_dir),
     )
     if with_checkpointer:
         kwargs["checkpointer"] = MemorySaver()

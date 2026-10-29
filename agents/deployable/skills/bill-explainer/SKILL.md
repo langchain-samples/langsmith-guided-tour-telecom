@@ -1,3 +1,8 @@
+---
+name: bill-explainer
+description: Explain why a customer's bill changed month-over-month in plain language.
+---
+
 # bill-explainer
 
 ## Purpose
