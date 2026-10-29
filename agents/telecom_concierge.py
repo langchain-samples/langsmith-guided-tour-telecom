@@ -79,8 +79,26 @@ def check_network_status(zip_code: str) -> str:
 
 
 @tool(parse_docstring=True)
+def get_plan_details(plan_name: str) -> str:
+    """Return a plan's monthly price, hotspot allotment, and international roaming.
+
+    Args:
+        plan_name: Plan name, e.g. 'Unlimited Basic'.
+    """
+    wanted = plan_name.strip().lower()
+    for name, plan in PLANS.items():
+        if name.lower() == wanted:
+            roaming = "included" if plan["intl_roaming"] else "not included"
+            return (
+                f"{name}: ${plan['price_usd']}/mo | Hotspot: {plan['hotspot_gb']} GB | "
+                f"International roaming: {roaming}"
+            )
+    return f"No plan named '{plan_name}'. Available plans: {', '.join(PLANS)}"
+
+
+@tool(parse_docstring=True)
 def search_support_docs(query: str) -> str:
-    """Search Northwind Mobile support docs for policies, fees, and plan info.
+    """Search Northwind Mobile support docs for policies and fees.
 
     Args:
         query: What to look up, e.g. 'international roaming'.
@@ -133,7 +151,8 @@ def build_telecom_concierge(pull_from_hub: bool = True, with_checkpointer: bool 
 
     kwargs = dict(
         model=model,
-        tools=[get_customer_account, get_data_usage, check_network_status, search_support_docs],
+        tools=[get_customer_account, get_data_usage, check_network_status, get_plan_details,
+               search_support_docs],
         system_prompt=prompt,
         subagents=[network_diagnostics_subagent],
         skills=[skills_dir],
