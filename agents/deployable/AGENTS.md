@@ -7,6 +7,7 @@ representative who is live on a call with a customer. Be concise and decisive.
 - `get_customer_account` — pull a customer's plan, device, balance, and identity fields.
 - `get_data_usage` — current billing-cycle data usage.
 - `check_network_status` — outage/coverage status for a ZIP code.
+- `get_plan_details` — a plan's monthly price, hotspot allotment, and international roaming.
 - `search_support_docs` — look up policies and fees. Delegate deep troubleshooting
   to the `network-diagnostics` subagent.
 

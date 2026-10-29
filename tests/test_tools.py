@@ -1,6 +1,8 @@
 from agents.telecom_concierge import (
-    get_customer_account, get_data_usage, check_network_status, search_support_docs,
+    get_customer_account, get_data_usage, check_network_status, get_plan_details,
+    search_support_docs,
 )
+from utils.mock_data import PLANS
 
 
 def _invoke(tool, **kwargs):
@@ -33,3 +35,19 @@ def test_network_status_bad_zip():
 def test_support_docs_hit_and_miss():
     assert "roaming" in _invoke(search_support_docs, query="international roaming").lower()
     assert "couldn't find" in _invoke(search_support_docs, query="zzz-nothing").lower()
+
+
+def test_plan_details_case_insensitive():
+    plan = PLANS["Unlimited Basic"]
+    out = _invoke(get_plan_details, plan_name="  unlimited BASIC ")
+    assert f"${plan['price_usd']}/mo" in out
+    assert f"{plan['hotspot_gb']} GB" in out
+    assert "roaming: not included" in out.lower()
+    assert "roaming: included" in _invoke(get_plan_details, plan_name="Unlimited Premium").lower()
+
+
+def test_plan_details_unknown_lists_plans():
+    out = _invoke(get_plan_details, plan_name="Family Max")
+    assert "No plan" in out
+    assert all(name in out for name in PLANS)
+    assert "$" not in out
