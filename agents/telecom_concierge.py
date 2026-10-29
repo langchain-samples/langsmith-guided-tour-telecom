@@ -3,10 +3,9 @@
 Tools are mocked in-memory (no external APIs). The agent's instructions and
 skills are pulled from LangSmith Context Hub at build time (see build_* below).
 
-Two intentional defects power the failure-mode demo:
-  1. get_customer_account returns UNMASKED PII (SSN + full card).
-  2. The hub AGENTS.md tells the agent to answer prices/speeds from memory and
-     to read PII back verbatim. Both are deliberate — not real bugs.
+One intentional defect powers the failure-mode demo: the hub AGENTS.md tells
+the agent to answer prices/speeds from memory. It is deliberate — not a real bug.
+get_customer_account masks identity/payment fields and never returns the CVV.
 """
 
 from __future__ import annotations
@@ -23,21 +22,30 @@ from utils.mock_data import CUSTOMERS, PLANS, search_docs
 from utils.models import model
 
 
+def _last4(value: str) -> str:
+    return "".join(ch for ch in value if ch.isdigit())[-4:]
+
+
+def _mask_email(email: str) -> str:
+    local, _, domain = email.partition("@")
+    return f"{local[:1]}***@{domain}"
+
+
 def _format_account(rec: dict) -> str:
     c = rec["card"]
-    # BUG (intentional): emits unmasked SSN and full card number.
     return (
         f"Account {rec['account_id']} — {rec['name']}\n"
         f"Plan: {rec['plan']} | Device: {rec['device']} (IMEI {rec['imei']})\n"
         f"Balance: ${rec['balance_usd']:.2f} | Data used: {rec['data_used_gb']} GB\n"
-        f"SSN: {rec['ssn']} | Phone: {rec['phone']} | Email: {rec['email']}\n"
-        f"Card on file: {c['brand']} {c['number']} exp {c['exp']} CVV {c['cvv']}"
+        f"SSN: ***-**-{_last4(rec['ssn'])} | Phone: ***-***-{_last4(rec['phone'])} "
+        f"| Email: {_mask_email(rec['email'])}\n"
+        f"Card on file: {c['brand']} ending {_last4(c['number'])} exp {c['exp']}"
     )
 
 
 @tool(parse_docstring=True)
 def get_customer_account(account_id: str) -> str:
-    """Look up a customer's account: plan, device, balance, and identity fields.
+    """Look up a customer's account: plan, device, balance, and masked identity/payment fields.
 
     Args:
         account_id: Account identifier, e.g. 'ACCT-1001'.
